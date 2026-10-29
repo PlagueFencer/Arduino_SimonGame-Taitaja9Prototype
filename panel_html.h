@@ -1,0 +1,262 @@
+// Generated from panel.html by update_panel.ps1 - edit panel.html, not this file.
+#pragma once
+const char PANEL_HTML[] PROGMEM = R"PANEL(<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Simon Panel</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --card: #181b22;
+    --line: #262a33;
+    --text: #eef0f4;
+    --muted: #8b92a1;
+    --red: #ef4b4b;
+    --green: #35c46a;
+    --blue: #3d8bfd;
+    --yellow: #f5c542;
+    --accent: var(--yellow);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 15px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    padding: 20px 16px 40px;
+  }
+  .wrap { max-width: 880px; margin: 0 auto; }
+  .stripe { display: flex; height: 6px; border-radius: 3px; overflow: hidden; margin-bottom: 18px; }
+  .stripe i { flex: 1; }
+  header { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; justify-content: space-between; margin-bottom: 18px; }
+  h1 { margin: 0; font-size: 26px; letter-spacing: .5px; }
+  .conn { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .pill { display: inline-flex; align-items: center; gap: 7px; padding: 6px 12px; border-radius: 999px; background: var(--card); border: 1px solid var(--line); font-size: 13px; color: var(--muted); }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+  .pill.on .dot { background: var(--green); box-shadow: 0 0 8px var(--green); }
+  .pill.on { color: var(--text); }
+  button { font: inherit; cursor: pointer; border-radius: 8px; border: 1px solid var(--line); background: var(--card); color: var(--text); padding: 7px 14px; }
+  button:hover { border-color: var(--muted); }
+  button.primary { background: var(--blue); border-color: var(--blue); color: #fff; }
+  button.danger { color: var(--red); }
+
+  .status { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 18px; margin-bottom: 14px; font-size: 18px; display: flex; align-items: center; gap: 12px; }
+  .status .badge { width: 12px; height: 12px; border-radius: 50%; flex: none; background: var(--muted); }
+  .status[data-s="starting"] .badge { background: var(--yellow); animation: pulse 1s infinite; }
+  .status[data-s="showing"] .badge { background: var(--blue); }
+  .status[data-s="input"] .badge { background: var(--green); animation: pulse 1s infinite; }
+  .status[data-s="over"] .badge { background: var(--red); }
+  @keyframes pulse { 50% { opacity: .3; } }
+
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; margin-bottom: 14px; }
+  .stat { position: relative; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+  .stat .label { color: var(--muted); font-size: 13px; text-transform: uppercase; letter-spacing: 1px; }
+  .stat .value { font-size: 48px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.1; margin-top: 4px; }
+  .stat.best .value { color: var(--accent); }
+  .pop { position: absolute; right: 18px; top: 14px; font-weight: 700; color: var(--green); animation: rise 1s ease-out forwards; pointer-events: none; }
+  @keyframes rise { from { opacity: 1; transform: translateY(8px); } to { opacity: 0; transform: translateY(-22px); } }
+
+  .grid { display: grid; grid-template-columns: 2fr 1fr; gap: 14px; }
+  @media (max-width: 700px) { .grid { grid-template-columns: 1fr; } }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+  .card h2 { margin: 0 0 12px; font-size: 16px; display: flex; justify-content: space-between; align-items: center; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); }
+  th { color: var(--muted); font-weight: 500; font-size: 13px; }
+  td.num, th.num { text-align: right; }
+  tr.new td { background: rgba(245, 197, 66, .12); }
+  .rank { width: 30px; color: var(--muted); }
+  tr:nth-child(1) .rank { color: var(--yellow); font-weight: 700; }
+  .empty { color: var(--muted); padding: 14px 0; }
+  .rules p { margin: 0 0 8px; color: var(--muted); }
+  .rules b { color: var(--text); }
+  .last { font-size: 15px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); color: var(--muted); }
+  .last b { color: var(--text); }
+  .note { color: var(--muted); font-size: 13px; margin-top: 18px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="stripe"><i style="background:var(--red)"></i><i style="background:var(--green)"></i><i style="background:var(--blue)"></i><i style="background:var(--yellow)"></i></div>
+
+  <header>
+    <h1>Simon Says</h1>
+    <div class="conn">
+      <span class="pill" id="conn"><span class="dot"></span><span id="connText">Not connected</span></span>
+      <button class="primary" id="usbBtn" hidden>Connect USB</button>
+    </div>
+  </header>
+
+  <div class="status" id="status" data-s="none"><span class="badge"></span><span id="statusText">Waiting for the game...</span></div>
+
+  <div class="stats">
+    <div class="stat"><div class="label">Round</div><div class="value" id="round">-</div></div>
+    <div class="stat" id="scoreCard"><div class="label">Score</div><div class="value" id="score">0</div></div>
+    <div class="stat best"><div class="label">High score</div><div class="value" id="best">0</div></div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h2>Leaderboard <button class="danger" id="clearBtn">Clear</button></h2>
+      <table>
+        <thead><tr><th class="rank">#</th><th>Game</th><th class="num">Rounds</th><th class="num">Score</th></tr></thead>
+        <tbody id="board"></tbody>
+      </table>
+      <div class="empty" id="boardEmpty">No scores yet. Play a game!</div>
+    </div>
+    <div class="card rules">
+      <h2>Scoring</h2>
+      <p><b>+50</b> for every correct color</p>
+      <p><b>+100</b> for each completed round, starting from round 3</p>
+      <div class="last" id="last">No game finished yet.</div>
+      <div class="last">Games played: <b id="games">0</b></div>
+    </div>
+  </div>
+
+  <p class="note" id="note"></p>
+</div>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+  const STATUS = {
+    idle: "Press any button to start the game",
+    starting: "Starting...",
+    showing: "Watch the sequence...",
+    input: "Your turn: repeat the sequence",
+    over: "Game over"
+  };
+
+  // Served by the ESP32 over the hotspot -> poll it.
+  // Opened as a file (or localhost) on a PC -> use USB (Web Serial).
+  const fromEsp = location.protocol.startsWith("http") &&
+                  !["localhost", "127.0.0.1", ""].includes(location.hostname);
+
+  let lastScoreSeen = null;
+
+  function setConn(on, text) {
+    $("conn").classList.toggle("on", on);
+    $("connText").textContent = text;
+  }
+
+  function popPoints(diff) {
+    const el = document.createElement("span");
+    el.className = "pop";
+    el.textContent = "+" + diff;
+    $("scoreCard").appendChild(el);
+    setTimeout(() => el.remove(), 1000);
+  }
+
+  function render(s) {
+    $("status").dataset.s = s.state;
+    let text = STATUS[s.state] || s.state;
+    if ((s.state === "showing" || s.state === "input") && s.round > 0) {
+      text = "Round " + s.round + " - " + text;
+    }
+    if (s.state === "over") text += " - final score " + s.lastScore;
+    $("statusText").textContent = text;
+
+    $("round").textContent = s.round > 0 ? s.round : "-";
+    $("score").textContent = s.score;
+    $("best").textContent = s.best;
+    $("games").textContent = s.games;
+
+    if (lastScoreSeen !== null && s.score > lastScoreSeen) popPoints(s.score - lastScoreSeen);
+    lastScoreSeen = s.score;
+
+    $("last").innerHTML = s.lastScore >= 0
+      ? "Last game: <b>" + s.lastScore + "</b> points, <b>" + s.lastRounds + "</b> rounds completed"
+      : "No game finished yet.";
+
+    const newest = s.games;
+    const rows = s.board.map((e, i) =>
+      '<tr' + (e.g === newest && s.state === "over" ? ' class="new"' : "") + ">" +
+      '<td class="rank">' + (i + 1) + "</td>" +
+      "<td>Game " + e.g + "</td>" +
+      '<td class="num">' + e.r + "</td>" +
+      '<td class="num"><b>' + e.s + "</b></td></tr>").join("");
+    $("board").innerHTML = rows;
+    $("boardEmpty").hidden = s.board.length > 0;
+  }
+
+  // ---------- Hotspot mode ----------
+  async function poll() {
+    try {
+      const r = await fetch("/state", { cache: "no-store", signal: AbortSignal.timeout(3000) });
+      render(await r.json());
+      setConn(true, "Hotspot");
+    } catch (e) {
+      setConn(false, "Lost connection");
+    }
+    setTimeout(poll, 400);
+  }
+
+  // ---------- USB mode ----------
+  let writer = null;
+
+  async function connectUsb() {
+    try {
+      const port = await navigator.serial.requestPort();
+      await port.open({ baudRate: 115200 });
+      setConn(true, "USB");
+      $("usbBtn").hidden = true;
+
+      const enc = new TextEncoderStream();
+      enc.readable.pipeTo(port.writable);
+      writer = enc.writable.getWriter();
+      send("@state");
+
+      const reader = port.readable.pipeThrough(new TextDecoderStream()).getReader();
+      let buf = "";
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buf += value;
+        let nl;
+        while ((nl = buf.indexOf("\n")) >= 0) {
+          const line = buf.slice(0, nl).trim();
+          buf = buf.slice(nl + 1);
+          if (line.startsWith("@{")) {
+            try { render(JSON.parse(line.slice(1))); } catch (e) {}
+          }
+        }
+      }
+    } catch (e) {
+      $("note").textContent = "USB error: " + e.message +
+        " (close the Arduino Serial Monitor - only one program can use the port).";
+    }
+    writer = null;
+    setConn(false, "USB disconnected");
+    $("usbBtn").hidden = false;
+  }
+
+  function send(cmd) {
+    if (writer) writer.write(cmd + "\n");
+  }
+
+  // ---------- Clear leaderboard ----------
+  $("clearBtn").onclick = async () => {
+    if (!confirm("Clear the whole leaderboard?")) return;
+    if (fromEsp) {
+      const r = await fetch("/clear", { method: "POST" });
+      render(await r.json());
+    } else {
+      send("@clear");
+    }
+  };
+
+  // ---------- Start ----------
+  if (fromEsp) {
+    poll();
+  } else if ("serial" in navigator) {
+    $("usbBtn").hidden = false;
+    $("usbBtn").onclick = connectUsb;
+    $("note").textContent = "Plug the ESP32 into this PC by USB, then click Connect USB and pick its port.";
+  } else {
+    $("note").textContent = "USB mode needs Chrome or Edge. Or join the \"SimonGame\" Wi-Fi and open http://192.168.4.1";
+  }
+</script>
+</body>
+</html>
+)PANEL";

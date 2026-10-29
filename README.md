@@ -21,3 +21,19 @@
 <img width="3400" height="2880" alt="4 · Lights   sounds" src="https://github.com/user-attachments/assets/4b0ff2ea-01d0-4f0b-aea6-8125ff131ec9" />
 
 (I used Claude to generate those diagrams)
+
+## Web panel (score + leaderboard)
+
+The game shows the current round, score and a top-10 leaderboard on a web page. The leaderboard is saved on the ESP32, so it survives power-offs.
+
+**Scoring:** +50 points for every correct color, +100 for each completed round starting from round 3.
+
+Two ways to open it (both work at the same time):
+
+- **Wi-Fi hotspot:** connect a phone or laptop to the `SimonGame` Wi-Fi (password `simon1234`) and open http://192.168.4.1
+- **USB:** plug the ESP32 into the PC, open `panel.html` in Chrome or Edge, click **Connect USB** and choose the board's port. Close the Arduino Serial Monitor first, because only one program can use the port.
+
+Files:
+
+- `web_panel.h`: hotspot, web server, scoring and the saved leaderboard
+- `panel.html`: the panel page. After editing it, run `update_panel.ps1` to refresh `panel_html.h`, then upload again.

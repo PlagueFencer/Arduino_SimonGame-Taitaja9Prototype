@@ -4,6 +4,9 @@
 // Each round adds one more step. A wrong press or timeout ends the game.
 // Press the reset button at any time to start a new game.
 // An active buzzer gives a long buzz when the player fails.
+// Scores and the leaderboard are shown on a web panel (see web_panel.h).
+
+#include "web_panel.h"
 
 const int buttonPIN_1 = A4;
 const int buttonPIN_2 = A3;
@@ -109,6 +112,7 @@ bool waitOrReset(unsigned long ms) {
   unsigned long start = millis();
   while (millis() - start < ms) {
     if (resetPressed()) return true;
+    panelPoll();
     delay(1);
   }
   return false;
@@ -125,6 +129,7 @@ int readPlayerButton() {
 
   while (millis() - start < INPUT_TIMEOUT) {
     if (resetPressed()) return RESULT_RESET;
+    panelPoll();
 
     for (int i = 0; i < 4; i++) {
       if (isPressed(buttonPins[i])) {
@@ -239,6 +244,7 @@ void waitForStart() {
         delay(300);
         return;
       }
+      panelPoll();
       delay(1);
     }
     ledOff(i);
@@ -256,6 +262,7 @@ void waitForResetRelease() {
 // Plays one full game. Returns when the game ends or reset is pressed.
 void playGame() {
   sequenceLength = 0;
+  panelGameStart();
   startAnimation();
 
   while (sequenceLength < MAX_STEPS) {
@@ -272,8 +279,10 @@ void playGame() {
       }
       Serial.println();
     }
+    panelRoundStart(sequenceLength);
 
-    if (playSequence()) { waitForResetRelease(); return; }
+    if (playSequence()) { panelGameAborted(); waitForResetRelease(); return; }
+    panelInputStart();
 
     // Player repeats the sequence
     for (int i = 0; i < sequenceLength; i++) {
@@ -281,11 +290,13 @@ void playGame() {
 
       if (pressed == RESULT_RESET) {
         Serial.println("Reset");
+        panelGameAborted();
         waitForResetRelease();
         return;
       }
       if (pressed == RESULT_TIMEOUT) {
         Serial.println("Failed: too slow");
+        panelGameOver(sequenceLength - 1);
         gameOverAnimation();
         return;
       }
@@ -296,21 +307,26 @@ void playGame() {
         Serial.print(sequence[i] + 1);
         Serial.print(", got button ");
         Serial.println(pressed + 1);
+        panelGameOver(sequenceLength - 1);
         gameOverAnimation();
         return;
       }
+      panelCorrectPress();
     }
 
+    panelRoundDone(sequenceLength);
     winRoundAnimation();
   }
 
   Serial.println("You beat the whole game!");
+  panelGameOver(sequenceLength);
   for (int i = 0; i < 3; i++) startAnimation();
 }
 
 // ---------- Arduino entry points ----------
 
 void setup() {
+  Serial.setTxBufferSize(1024); // room for the panel's score messages
   Serial.begin(115200);
   Serial.println("ESP32 Simon game starting");
 
@@ -331,6 +347,7 @@ void setup() {
   allLeds(false);
   buzzerSelfTest();
   randomSeed(esp_random()); // ESP32 hardware random number
+  panelBegin();             // Wi-Fi hotspot + web panel
 }
 
 void loop() {
