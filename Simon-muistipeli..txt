@@ -1,0 +1,3 @@
+Simon-muistipeli.
+Aloita painamalla mitä tahansa painiketta, seuraa LED-valojen liikkeitä ja paina valojen vastaavia painikkeita.
+Ensimmäinen jakso alkaa yhdellä valolla, ja jokaisessa uudessa jaksossa lisätään yksi uusi värivalo.
